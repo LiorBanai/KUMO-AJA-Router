@@ -1,0 +1,91 @@
+name: .NET Core Desktop
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+    - README.md
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+    - README.md
+
+
+jobs:
+
+  build:
+
+    strategy:
+      matrix:
+        configuration: [Release, Debug]
+
+    runs-on: windows-latest  # For a list of available runner types, refer to 
+                             # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
+
+    env:
+      Solution_Name: Analogy.LogViewer.Intuitive.sln                         # Replace with your solution name, i.e. MyWpfApp.sln.
+      Test_Project_Path: Analogy.LogViewer.Intuitive.UnitTests\Analogy.LogViewer.Intuitive.UnitTests.csproj                 # Replace with the path to your test project, i.e. MyWpfApp.Tests\MyWpfApp.Tests.csproj.
+
+    steps:
+    - name: print type
+      run:  echo "Type - ${{github.event_name}}"
+      
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    # Install the .NET Core workload
+    - name: Install .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.100
+
+    # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1.0.2
+    
+    # Restore the application to populate the obj folder with RuntimeIdentifiers
+    - name: Restore the application
+      run: msbuild $env:Solution_Name /t:Restore /p:Configuration=$env:Configuration
+      env:
+        Configuration: ${{ matrix.configuration }}
+    
+   # Buid the application 
+    - name: Build the application
+      run: msbuild $env:Solution_Name /t:Rebuild /p:Configuration=$env:Configuration
+      env:
+        Configuration: ${{ matrix.configuration }}
+    # Execute all unit tests in the solution
+    - name: Execute unit tests
+      run: dotnet test
+
+    # Publish Artifacts 
+    - name: 'Publish Artifacts'   
+      uses: actions/upload-artifact@v2
+      with:
+       name: 'artifactory'
+       path: |
+        ./Analogy.LogViewer.Intuitive/bin/${{ matrix.configuration }}
+  
+  push-nuget:
+    name: 'Push NuGet Packages'
+    needs: build
+    if: ${{ github.event_name == 'push'}}
+    runs-on: windows-latest
+    steps:
+      - name: 'Download Artifact'
+        uses: actions/download-artifact@v1
+        with:
+          name: 'artifactory'
+      - name: 'Dotnet NuGet Push'
+        run: |
+          Get-ChildItem .\artifactory -Filter *.nupkg |
+          Where-Object { !$_.Name.Contains('preview') } |
+          ForEach-Object { dotnet nuget push $_ --source https://api.nuget.org/v3/index.json --skip-duplicate --api-key ${{secrets.NUGET_API_KEY}} }
+        shell: pwsh
+
+
+      - name: Setup NuGet.exe for use with actions
+        uses: NuGet/setup-nuget@v1.0.5
+
