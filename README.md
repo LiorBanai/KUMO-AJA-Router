@@ -13,5 +13,12 @@
  [![Nuget](https://img.shields.io/nuget/v/KUMO-AJA-Router)](https://www.nuget.org/packages/KUMO-AJA-Router/)
 </p>
 
-Intuitive implementation for internal log files
+C# application for managing KUMO AJA Router mapping
+
+Examples:
+![Animation](Assets/AJA_VR_Reset.gif)
+
+
+![static](Assets/AJA_Mapping.jpg)
+
 
