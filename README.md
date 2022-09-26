@@ -10,7 +10,7 @@
 <a href="https://github.com/LiorBanai/Analogy.LogViewer.Intuitive/blob/master/LICENSE.md">
     <img src="https://img.shields.io/github/license/LiorBanai/KUMO-AJA-Router" img alt="License"/>
 </a>
- [![Nuget](https://img.shields.io/nuget/v/KUMO-AJA-Router)](https://www.nuget.org/packages/LiorBanai.KumoAJA.API/)
+ [![Nuget](https://img.shields.io/nuget/v/LiorBanai.KumoAJA.API)](https://www.nuget.org/packages/LiorBanai.KumoAJA.API/)
 </p>
 
 C# application for managing KUMO AJA Router mapping
