@@ -433,8 +433,8 @@ namespace KumoAJA.API
             LogResponse(restResponse);
             if (restResponse.StatusCode == HttpStatusCode.OK)
             {
-                var values = JsonConvert.DeserializeObject<Dictionary<string, string>>(restResponse.Content);
-                return Convert.ToInt32(values["connectionid"]);
+                KumoConnectionIdData connectionData = JsonConvert.DeserializeObject<KumoConnectionIdData>(restResponse.Content);
+                return connectionData.ConnectionId;
             }
 
             return -1;

@@ -52,42 +52,42 @@ namespace KumoAJA.API
 
         public Task<string> GetNetworkCommand()
         {
-            throw new NotImplementedException();
+            return Task.FromResult("");
         }
 
         public Task<string> GetNetworkState()
         {
-            throw new NotImplementedException();
+            return Task.FromResult("");
         }
 
         public Task<string> GetControlPanelMode()
         {
-            throw new NotImplementedException();
+            return Task.FromResult("");
         }
 
         public Task<string> GetKumoProductId()
         {
-            throw new NotImplementedException();
+            return Task.FromResult("");
         }
 
         public Task<string> GetNumberOfSources()
         {
-            throw new NotImplementedException();
+            return Task.FromResult("16");
         }
 
         public Task<string> GetAuthentication()
         {
-            throw new NotImplementedException();
+            return Task.FromResult("");
         }
 
         public Task<string> GetIpConfig()
         {
-            throw new NotImplementedException();
+            return Task.FromResult("");
         }
 
         public Task<string> GetIpAddress()
         {
-            throw new NotImplementedException();
+            return Task.FromResult("");
         }
 
         public Task<string> GetIPAddress_1()
@@ -294,17 +294,17 @@ namespace KumoAJA.API
 
         public Task<string> SetDestinationStatus(int destNum, int portNum)
         {
-            throw new NotImplementedException();
+            return Task.FromResult("");
         }
 
         public Task SetSourceXLine1(int sourcePortNumber, string text)
         {
-            throw new NotImplementedException();
+            return Task.FromResult("");
         }
 
         public Task SetDestinationXLine1(int destinationPortNumber, string text)
         {
-            throw new NotImplementedException();
+            return Task.FromResult("");
         }
 
         public void StartPollingEvents()
