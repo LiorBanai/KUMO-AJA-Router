@@ -36,13 +36,13 @@ jobs:
 
     # Install the .NET Core workload
     - name: Install .NET Core
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v3.0.3
       with:
-        dotnet-version: 6.0.100
+        dotnet-version: 7.0.x
 
     # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
     - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@v1.0.2
+      uses: microsoft/setup-msbuild@v1.1.3
     
     # Restore the application to populate the obj folder with RuntimeIdentifiers
     - name: Restore the application
@@ -88,3 +88,12 @@ jobs:
       - name: Setup NuGet.exe for use with actions
         uses: NuGet/setup-nuget@v1.0.5
 
+
+      - name: Add private GitHub registry to NuGet
+        run: nuget sources add -name "GPR" -Source https://nuget.pkg.github.com/LiorBanai/index.json -Username LiorBanai -Password ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: 'Dotnet NuGet Push to github registry'     
+        run: |
+          Get-ChildItem .\artifactory -Filter *.nupkg |
+          Where-Object { !$_.Name.Contains('preview') } |
+          ForEach-Object { nuget push $_  -Source "GPR" -SkipDuplicate } 
