@@ -7,7 +7,7 @@
     <img src="https://img.shields.io/github/issues/LiorBanai/KUMO-AJA-Router"  alt="Issues" />
 </a>
 ![GitHub closed issues](https://img.shields.io/github/issues-closed-raw/LiorBanai/KUMO-AJA-Router)
-<a href="https://github.com/LiorBanai/Analogy.LogViewer.Intuitive/blob/master/LICENSE.md">
+<a href="https://github.com/LiorBanai/KUMO-AJA-Router/blob/master/LICENSE.md">
     <img src="https://img.shields.io/github/license/LiorBanai/KUMO-AJA-Router" img alt="License"/>
 </a>
  [![Nuget](https://img.shields.io/nuget/v/LiorBanai.KumoAJA.API)](https://www.nuget.org/packages/LiorBanai.KumoAJA.API/)
