@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net48;net471;net6.0-windows;net5.0-windows</TargetFrameworks>
+		<TargetFrameworks>net48;net471;net7.0-windows;net6.0-windows</TargetFrameworks>
 		<GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
 		<PackageId>LiorBanai.KumoAJA.API</PackageId>
 		<OutputType>Library</OutputType>
@@ -25,7 +25,7 @@
 		<Version>1.1.0</Version>
 		<Company>Lior Banai</Company>
 		<Nullable>enable</Nullable>
-		<LangVersion>8.0</LangVersion>
+		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace KumoAJA.API
+namespace Kumo.Routing.API
 {
     public interface IKumoApi
     {
@@ -12,8 +12,10 @@ namespace KumoAJA.API
         event EventHandler<List<KumoColor>> ColorChanged;
         event EventHandler<List<KumoLock>> LockedChanged;
         event EventHandler SignalSwitchingModeChanged;
-
+        event EventHandler<bool> ConnectionStateChanged;
+        bool Connected {get; }
         Task<bool> Login(string pw);
+        Task<string> GetDeviceInformation();
         Task <Dictionary<int, List<int>>> GetMatrix();
 
         /// <summary>
@@ -83,13 +85,24 @@ namespace KumoAJA.API
         /// <param name="sourcePortNumber"></param>
         /// <returns></returns> 
         Task<string> GetSourceXLine1(int sourcePortNumber);
-
+        /// <summary>
+        ///  get the text that appears on the bottom line of the source X button
+        /// </summary>
+        /// <param name="sourcePortNumber"></param>
+        /// <returns></returns> 
+        Task<string> GetSourceXLine2(int sourcePortNumber);
         /// <summary>
         /// get the text that appears on the top line of the destination X button
         /// </summary>
         /// <param name="destinationPortNumber"></param>
         /// <returns></returns>
         Task<string> GetDestinationXLine1(int destinationPortNumber);
+        /// <summary>
+        /// get the text that appears on the bottom line of the destination X button
+        /// </summary>
+        /// <param name="destinationPortNumber"></param>
+        /// <returns></returns>
+        Task<string> GetDestinationXLine2(int destinationPortNumber);
 
         /// <summary>
         /// set value of which source is connected to destination destNum

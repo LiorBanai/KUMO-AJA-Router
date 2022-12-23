@@ -1,4 +1,4 @@
-﻿namespace KumoAJA.API
+﻿namespace Kumo.Routing.API
 {
     public class KumoLock
     {

@@ -1,11 +1,6 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace KumoAJA.API
+namespace Kumo.Routing.API
 {
     internal class KumoConnectionIdData
     {

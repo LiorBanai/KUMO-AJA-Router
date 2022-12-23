@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace KumoAJA.API
+namespace Kumo.Routing.API
 {
     public class KumoColor
     {

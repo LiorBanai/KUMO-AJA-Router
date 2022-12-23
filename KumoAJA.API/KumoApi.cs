@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using RestSharp;
 
-namespace KumoAJA.API
+namespace Kumo.Routing.API
 {
     public class KumoApi : IKumoApi
     {
@@ -22,6 +22,7 @@ namespace KumoAJA.API
         public event EventHandler<List<KumoColor>> ColorChanged;
         public event EventHandler<List<KumoLock>> LockedChanged;
         public event EventHandler SignalSwitchingModeChanged;
+        public event EventHandler<bool> ConnectionStateChanged;
         private string _cookieToken;
         private DateTime LastPooling { get; set; }
         private readonly RestClient _client;
@@ -30,7 +31,7 @@ namespace KumoAJA.API
         private int ConnectId { get; set; }
         private SemaphoreSlim lockSlim;
         public bool IsEventsPoolingActive { get; private set; }
-
+        public bool Connected { get; private set; }
         Task onReportTask;
 
         private CancellationTokenSource cts;
@@ -137,6 +138,10 @@ namespace KumoAJA.API
         {
             try
             {
+                if (string.IsNullOrEmpty(pw))
+                {
+                    pw = "";
+                }
                 var request = new RestRequest("/authenticator/login", Method.Post);
                 request.AddHeader("content-type", "application/x-www-form-urlencoded");
                 request.AddHeader("Accept", "*/*");
@@ -154,18 +159,47 @@ namespace KumoAJA.API
                     this._cookieToken = cookie.Value.ToString();
                     if (string.IsNullOrEmpty(_cookieToken) || _cookieToken.Contains("invalid"))
                     {
+                        Connected = false;
+                        ConnectionStateChanged?.Invoke(this,false);
                         return false;
                     }
                     NumberOfPorts = Convert.ToInt32(await GetNumberOfSources());
+                    Connected = true;
+                    ConnectionStateChanged?.Invoke(this, true);
                     return true;
                 }
 
+                Connected = false;
+                ConnectionStateChanged?.Invoke(this, false);
                 return false;
             }
             catch (Exception ex)
             {
+                ConnectionStateChanged?.Invoke(this, false);
                 Logger?.LogError(ex, "login failed");
                 return false;
+            }
+        }
+
+        public async Task<string> GetDeviceInformation()
+        {
+            try
+            {
+                var request = new RestRequest("browse.json", Method.Get);
+
+                if (!string.IsNullOrEmpty(_cookieToken))
+                {
+                    request.AddHeader("Cookie", _cookieToken);
+                }
+                request.RequestFormat = DataFormat.Json;
+                var response = await _client.ExecuteAsync(request);
+                List<KumoDeviceInformation> info = JsonConvert.DeserializeObject<List<KumoDeviceInformation>>(response.Content);
+                return info.First().Description;
+            }
+            catch (Exception ex)
+            {
+                Logger?.LogError(ex, "Get Info failed; {msg}",ex.Message);
+                return "";
             }
         }
 
@@ -441,67 +475,59 @@ namespace KumoAJA.API
         }
 
 
-        private async Task<KumoEvent> GetEvents(int connect_id)
+        private async Task<KumoEvent> GetEvents(int connectId)
         {
-            try
+
+
+            var request =
+                new RestRequest("/config?action=wait_for_config_events&connectionid=" + connectId.ToString(),
+                    Method.Get);
+            if (!string.IsNullOrEmpty(_cookieToken))
             {
-                var request =
-                    new RestRequest("/config?action=wait_for_config_events&connectionid=" + connect_id.ToString(),
-                        Method.Get);
-                if (!string.IsNullOrEmpty(_cookieToken))
-                {
-                    request.AddHeader("Cookie", _cookieToken);
-                    request.AddHeader("Accept", "*/*");
-                }
+                request.AddHeader("Cookie", _cookieToken);
+                request.AddHeader("Accept", "*/*");
+            }
 
-                RestResponse res = await _client.ExecuteAsync(request);
-                if (res.StatusCode == HttpStatusCode.OK)
+            RestResponse res = await _client.ExecuteAsync(request);
+            if (res.StatusCode == HttpStatusCode.OK)
+            {
+                string data = res.Content;
+                List<KumoEventData> eventData = JsonConvert.DeserializeObject<List<KumoEventData>>(data);
+                if (eventData.Any())
                 {
-                    string data = res.Content;
-                    List<KumoEventData> eventData = JsonConvert.DeserializeObject<List<KumoEventData>>(data);
-                    if (eventData.Any())
+                    Logger?.LogInformation("polling event Data: {data}", data);
+                    int tempvValue = -1;
+                    List<KumoText> kumoPortTextList = new List<KumoText>();
+                    List<KumoColor> kumoColorList = new List<KumoColor>();
+                    List<KumoLock> kumoLockList = new List<KumoLock>();
+                    Dictionary<int, List<int>> sourcePortMap = new Dictionary<int, List<int>>();
+                    if (eventData.Exists(d => d.ParamID.Equals("eParamID_SignalSwitching")))
                     {
-                        Logger?.LogInformation("polling event Data: {data}", data);
-                        int tempvValue = -1;
-                        List<KumoText> kumoPortTextList = new List<KumoText>();
-                        List<KumoColor> kumoColorList = new List<KumoColor>();
-                        List<KumoLock> kumoLockList = new List<KumoLock>();
-                        Dictionary<int, List<int>> sourcePortMap = new Dictionary<int, List<int>>();
-                        if (eventData.Exists(d => d.ParamID.Equals("eParamID_SignalSwitching")))
-                        {
-                            //Mode was changed (number of connections (4,8,16)). Need to recreate the UI
-                            NumberOfPorts = Convert.ToInt32(await GetNumberOfSources());
-                            SignalSwitchingModeChanged?.Invoke(this, EventArgs.Empty);
-                            return KumoEvent.Empty;
+                        //Mode was changed (number of connections (4,8,16)). Need to recreate the UI
+                        NumberOfPorts = Convert.ToInt32(await GetNumberOfSources());
+                        SignalSwitchingModeChanged?.Invoke(this, EventArgs.Empty);
+                        return KumoEvent.Empty;
 
-                        }
-                        //get Temperature
-                        if (eventData.Exists(d => d.ParamID.Equals("eParamID_Temperature")))
-                        {
-                            KumoEventData tempDic = eventData.First(x => x.ParamID.Equals("eParamID_Temperature"));
-                            tempvValue = tempDic.NumericValue;
-                        }
-                        sourcePortMap = GetChangedMatrix(eventData);
-                        kumoPortTextList = GetChangedText(eventData);
-                        kumoColorList = GetChangedColor(eventData);
-                        kumoLockList = GetLockedStatus(eventData);
-                        return new KumoEvent(tempvValue, sourcePortMap, kumoPortTextList, kumoColorList, kumoLockList);
                     }
-
-                    return KumoEvent.Empty;
-
+                    //get Temperature
+                    if (eventData.Exists(d => d.ParamID.Equals("eParamID_Temperature")))
+                    {
+                        KumoEventData tempDic = eventData.First(x => x.ParamID.Equals("eParamID_Temperature"));
+                        tempvValue = tempDic.NumericValue;
+                    }
+                    sourcePortMap = GetChangedMatrix(eventData);
+                    kumoPortTextList = GetChangedText(eventData);
+                    kumoColorList = GetChangedColor(eventData);
+                    kumoLockList = GetLockedStatus(eventData);
+                    return new KumoEvent(tempvValue, sourcePortMap, kumoPortTextList, kumoColorList, kumoLockList);
                 }
-                else
-                {
-                    Logger?.LogError("Error getting events: Status code {StatusCode}.", res.StatusCode);
-                    return KumoEvent.Empty;
-                }
+
+                return KumoEvent.Empty;
 
             }
-            catch (Exception ex)
+            else
             {
-                Logger?.LogError(ex, "Error getting events: {message}. Resetting Connection id", ex.Message);
-                ConnectId = -1;
+                Logger?.LogError("Error getting events: Status code {StatusCode}.", res.StatusCode);
                 return KumoEvent.Empty;
             }
         }
@@ -548,7 +574,7 @@ namespace KumoAJA.API
         private List<KumoColor> GetChangedColor(List<KumoEventData> values)
         {
             List<KumoColor> kumoColorList = new List<KumoColor>();
-            var dataList = values.Where(x => (x.ParamID.Contains("param_id") && x.ParamID.Contains("Button_Settings_"))).ToList();
+            var dataList = values.Where(x => (x.ParamID.Contains("Button_Settings_"))).ToList();
             if (dataList.Any())
             {
                 kumoColorList = new List<KumoColor>();
@@ -580,7 +606,7 @@ namespace KumoAJA.API
         private List<KumoText> GetChangedText(List<KumoEventData> values)
         {
             List<KumoText> kumoPortTextList = new List<KumoText>();
-            var textsList = values.Where(x => (x.ParamID.Contains("param_id") && x.ParamID.Contains("_Line_"))).ToList();
+            var textsList = values.Where(x => (x.ParamID.Contains("_XPT_") && x.ParamID.Contains("_Line_"))).ToList();
             if (textsList.Any())
             {
                 kumoPortTextList = new List<KumoText>();
@@ -591,13 +617,12 @@ namespace KumoAJA.API
                     string paramId = textsList[i].ParamID;
                     if (paramId.EndsWith("Line_1", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        kPT.line_1_text = textsList[i].NameValue;
+                        kPT.Line1Text = textsList[i].NameValue;
                     }
                     else if (paramId.EndsWith("Line_2", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        kPT.line_2_text = textsList[i].NameValue;
+                        kPT.Line2Text = textsList[i].NameValue;
                     }
-                    i++;
 
                     portType p = paramId.Contains("Source") ? portType.Source : portType.Destination;
                     var portNum = Convert.ToInt32(Regex.Match(paramId, @"\d+").Value);
@@ -633,6 +658,10 @@ namespace KumoAJA.API
                             await PollEvents();
                             await Task.Delay(Settings.PollInterval, cancelToken);
                         }
+                        catch (TaskCanceledException e)
+                        {
+                            Logger?.LogInformation(e, "Cancelling events reading dut to cancel request");
+                        }
                         catch (Exception e)
                         {
                             Logger?.LogError(e, "Cancelling events reading");
@@ -660,6 +689,7 @@ namespace KumoAJA.API
                     Logger?.LogInformation("Current Connect id is {id}", ConnectId);
 
                 }
+
                 KumoEvent kE = await GetEvents(ConnectId);
                 if (kE.portMap.Any())
                 {
@@ -686,7 +716,32 @@ namespace KumoAJA.API
                 {
                     LockedChanged?.Invoke(this, kE.lockValue.ToList());
                 }
+
                 LastPooling = DateTime.Now;
+                if (!Connected)
+                {
+                    ConnectionStateChanged?.Invoke(this, true);
+                }
+                Connected = true;
+            }
+            
+            catch (System.Net.Http.HttpRequestException ne)
+            {
+                Logger?.LogError(ne, "Error getting events {message} due to Network Exception", ne.Message);
+                if (ne.Message.Contains("Request failed with status code ExpectationFailed"))
+                {
+                    if (!Connected)
+                    {
+                        ConnectionStateChanged?.Invoke(this, true);
+                        Connected = true;
+                    }
+                    return;
+                }
+                if (Connected)
+                {
+                    ConnectionStateChanged?.Invoke(this, false);
+                }
+                Connected = false;
             }
             catch (Exception ex)
             {

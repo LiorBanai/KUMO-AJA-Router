@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace KumoAJA.API
+namespace Kumo.Routing.API
 {
     public class KumoEvent
     {

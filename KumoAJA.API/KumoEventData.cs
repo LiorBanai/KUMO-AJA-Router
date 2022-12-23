@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace KumoAJA.API
+namespace Kumo.Routing.API
 {
     public class KumoEventData
     {

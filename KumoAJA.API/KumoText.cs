@@ -1,12 +1,33 @@
-﻿using System;
-
-namespace KumoAJA.API
+﻿namespace Kumo.Routing.API
 {
    public class KumoText
     {
         public portType pT;
         public int portNum;
-        public String line_1_text;
-        public String line_2_text;
+
+        public string Line1Text
+        {
+            get => _line1Text;
+            set
+            {
+                _line1Text = value;
+                Line1Changed = true;
+            }
+        }
+
+        public string Line2Text
+        {
+            get => _line2Text;
+            set
+            {
+                _line2Text = value;
+                Line2Changed = true;
+            }
+        }
+
+        private string _line1Text;
+        private string _line2Text;
+        public bool Line1Changed { get; set; }
+        public bool Line2Changed { get; set; }
     }
 }

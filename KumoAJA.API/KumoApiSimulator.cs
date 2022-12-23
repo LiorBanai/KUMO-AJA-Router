@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace KumoAJA.API
+namespace Kumo.Routing.API
 {
     public class KumoApiSimulator : IKumoApi
     {
@@ -14,6 +14,7 @@ namespace KumoAJA.API
         public event EventHandler<List<KumoColor>> ColorChanged;
         public event EventHandler<List<KumoLock>> LockedChanged; 
         public event EventHandler SignalSwitchingModeChanged;
+        public event EventHandler<bool> ConnectionStateChanged;
 
         public bool IsEventsPoolingActive { get; private set; }
         public Task ForcePolling()
@@ -25,10 +26,18 @@ namespace KumoAJA.API
         {
             Logger = logger;
         }
+
+        public bool Connected { get; }
+
         public async Task<bool> Login(string pw)
         {
             await Task.Delay(1000);
             return true;
+        }
+
+        public Task<string> GetDeviceInformation()
+        {
+            return Task.FromResult("");
         }
 
         public async Task<Dictionary<int, List<int>>> GetMatrix()
@@ -52,42 +61,42 @@ namespace KumoAJA.API
 
         public Task<string> GetNetworkCommand()
         {
-            return Task.FromResult("");
+            throw new NotImplementedException();
         }
 
         public Task<string> GetNetworkState()
         {
-            return Task.FromResult("");
+            throw new NotImplementedException();
         }
 
         public Task<string> GetControlPanelMode()
         {
-            return Task.FromResult("");
+            throw new NotImplementedException();
         }
 
         public Task<string> GetKumoProductId()
         {
-            return Task.FromResult("");
+            throw new NotImplementedException();
         }
 
         public Task<string> GetNumberOfSources()
         {
-            return Task.FromResult("16");
+            throw new NotImplementedException();
         }
 
         public Task<string> GetAuthentication()
         {
-            return Task.FromResult("");
+            throw new NotImplementedException();
         }
 
         public Task<string> GetIpConfig()
         {
-            return Task.FromResult("");
+            throw new NotImplementedException();
         }
 
         public Task<string> GetIpAddress()
         {
-            return Task.FromResult("");
+            throw new NotImplementedException();
         }
 
         public Task<string> GetIPAddress_1()
@@ -287,24 +296,34 @@ namespace KumoAJA.API
             return Task.FromResult($"source_{sourcePortNumber}");
         }
 
+        public Task<string> GetSourceXLine2(int sourcePortNumber)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<string> GetDestinationXLine1(int destinationPortNumber)
         {
             return Task.FromResult($"dest_{destinationPortNumber}");
         }
 
+        public Task<string> GetDestinationXLine2(int destinationPortNumber)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<string> SetDestinationStatus(int destNum, int portNum)
         {
-            return Task.FromResult("");
+            throw new NotImplementedException();
         }
 
         public Task SetSourceXLine1(int sourcePortNumber, string text)
         {
-            return Task.FromResult("");
+            throw new NotImplementedException();
         }
 
         public Task SetDestinationXLine1(int destinationPortNumber, string text)
         {
-            return Task.FromResult("");
+            throw new NotImplementedException();
         }
 
         public void StartPollingEvents()
