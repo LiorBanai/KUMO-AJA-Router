@@ -26,6 +26,10 @@ namespace Kumo.Routing.API
         {
             Logger = logger;
         }
+        public KumoApiSimulator(ILogger<KumoApiSimulator> logger)
+        {
+            Logger = logger;
+        }
 
         public bool Connected { get; }
 

@@ -22,7 +22,7 @@
 		<PackageIcon>KUMOAJA.png</PackageIcon>
 		<PackageIconUrl />
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<Version>1.2.0</Version>
+		<Version>1.3.0</Version>
 		<Company>Lior Banai</Company>
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>

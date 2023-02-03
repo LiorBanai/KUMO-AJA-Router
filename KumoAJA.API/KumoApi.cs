@@ -62,6 +62,13 @@ namespace Kumo.Routing.API
         }
 
         /// <summary>
+        /// initialize router address
+        /// </summary>
+        public KumoApi(KumoSettings settings, ILogger<KumoApi> logger) : this(settings, (ILogger)logger)
+        {
+
+        }
+        /// <summary>
         /// execute the api by command name
         /// </summary>
         private async Task<string> GetCommand(string str, bool getByValueName = false, [CallerMemberName] string memberName = "")
